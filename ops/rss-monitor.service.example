@@ -1,0 +1,23 @@
+[Unit]
+Description=Cyber Inteligente - RSS Monitor
+After=network.target
+
+[Service]
+# Ajuste os caminhos/usuário antes de habilitar.
+WorkingDirectory=/home/SEU_USUARIO/projetos/youtube/feed-rss
+# Executa via módulo
+ExecStart=/usr/bin/python3 -m rss_monitor.main --limit 10
+# Configuração
+Environment=OPENAI_API_KEY=sua_key
+# Opcional: Ative se for usar
+Environment=TELEGRAM_ENABLED=True
+Environment=TELEGRAM_BOT_TOKEN=seu_token
+Environment=TELEGRAM_CHAT_ID=seu_chat_id
+Environment=DISCORD_ENABLED=True
+Environment=DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+Environment=SAVE_DIR=/home/SEU_USUARIO/projetos/youtube/feed-rss/out
+Restart=always
+User=SEU_USUARIO
+
+[Install]
+WantedBy=multi-user.target
