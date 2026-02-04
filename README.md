@@ -1,103 +1,107 @@
-# Cyber Inteligente - Monitor de RSS
+# 📡 RSS Feed Monitor
 
-Script compacto em Python para vigiar feeds de tecnologia/IA, filtrar notícias quentes e (opcionalmente) gerar roteiro curto estilo YouTube Shorts via OpenAI.
+> Async RSS monitor with AI-powered content generation and multi-platform notifications.
 
-## Como rodar
+[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org)
+[![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4-green.svg)](https://openai.com)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-1. Crie e ative um venv (opcional, mas recomendado).
-2. Instale dependências:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Exporte sua API Key da OpenAI se quiser gerar roteiros:
-   ```bash
-   export OPENAI_API_KEY="sua_key"
-   ```
-4. Execute via módulo:
-   ```bash
-   python -m rss_monitor.main --limit 5
-   ```
+## Features
 
-## O que o script faz
+- 🔄 **Async RSS Processing** — Fetches multiple feeds concurrently using `aiohttp`
+- 🔍 **Smart Filtering** — Keyword-based filtering with configurable time windows
+- 🤖 **AI Content Generation** — Generates YouTube Shorts scripts via OpenAI API
+- 📱 **Multi-Platform Delivery** — Telegram and Discord webhook support
+- 🗃️ **Deduplication** — Tracks seen items to avoid duplicates
+- ⚙️ **Flexible Config** — Environment variables + CLI arguments
 
-- Lê múltiplos feeds RSS de forma assíncrona.
-- Filtra notícias das últimas `--max-age-hours` (padrão 24h).
-- Busca palavras-chave.
-- Evita duplicados via `data/seen_items.json`.
-- Se `OPENAI_API_KEY` estiver setada e `--no-ai` não for usado, chama a OpenAI para gerar o roteiro.
-- Imprime cada resultado em JSON e, se definido `SAVE_DIR`, salva um `.json` por notícia.
-- Pode enviar o resultado para Telegram/Discord.
+## Quick Start
 
-## Configuração
-
-A configuração é feita via variáveis de ambiente (`.env` suportado) ou argumentos de linha de comando (que têm prioridade).
-
-### Argumentos CLI
-- `--limit`: Máximo de itens por execução.
-- `--max-age-hours`: Janela de tempo em horas (padrao 24h).
-- `--no-ai`: Desativa geração de roteiro.
-- `--feeds`: Caminho para arquivo de feeds.
-- `--keywords`: Caminho para arquivo de keywords.
-- `--telegram`: Forçar envio para Telegram.
-- `--discord`: Forçar envio para Discord.
-- `--save-dir`: Diretório para salvar JSONs.
-
-### Variáveis de Ambiente
-
-| Variável | Descrição | Padrão |
-|----------|-----------|--------|
-| `FEEDS` | Lista JSON de URLs (se não usar --feeds) | (Lista Default) |
-| `KEYWORDS` | Lista JSON de palavras-chave | (Lista Default) |
-| `MAX_AGE_HOURS` | Janela de tempo em horas | 24 |
-| `LIMIT` | Limite de itens | 10 |
-| `MODEL` | Modelo OpenAI | gpt-4o-mini |
-| `STATE_FILE` | Arquivo de estado | data/seen_items.json |
-| `SAVE_DIR` | Diretório para salvar JSONs | (Vazio = não salvar) |
-| `OPENAI_API_KEY` | Chave da API OpenAI | |
-| `NO_AI` | Desativa geração de roteiro | False |
-| `TELEGRAM_ENABLED` | Habilita envio p/ Telegram | False |
-| `TELEGRAM_BOT_TOKEN` | Token do Bot | |
-| `TELEGRAM_CHAT_ID` | Chat ID | |
-| `DISCORD_ENABLED` | Habilita envio p/ Discord | False |
-| `DISCORD_WEBHOOK_URL`| Webhook URL | |
-| `LOG_LEVEL` | Nível de log | INFO |
-
-## Customizações rápidas
-
-- Ajuste `Settings` em `rss_monitor/config.py` para mudar defaults.
-- Troque o prompt em `rss_monitor/services/ai.py` para mudar estilo/idioma do roteiro.
-- Integre com Telegram/Discord/YouTube em `rss_monitor/services/notification.py` ou `rss_monitor/main.py`.
-
-## Entrega em Telegram / Discord
-
-Telegram:
 ```bash
-export TELEGRAM_ENABLED=True
-export TELEGRAM_BOT_TOKEN="123:abc"
-export TELEGRAM_CHAT_ID="999999"
-python -m rss_monitor.main
+# Clone and setup
+git clone https://github.com/mmarleta/feed-rss.git
+cd feed-rss
+pip install -r requirements.txt
+
+# Run with defaults
+python -m rss_monitor.main --limit 5
+
+# With AI generation
+export OPENAI_API_KEY="your_key"
+python -m rss_monitor.main --limit 5
 ```
 
-Discord:
+## Configuration
+
+### CLI Arguments
+
+| Argument | Description | Default |
+|----------|-------------|---------|
+| `--limit` | Max items per run | 10 |
+| `--max-age-hours` | Time window in hours | 24 |
+| `--no-ai` | Disable AI genetion | false |
+| `--telegram` | Send to Telegram | false |
+| `--discord` | Send to Discord | false |
+
+### Environment Variables
+
 ```bash
-export DISCORD_ENABLED=True
-export DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..."
-python -m rss_monitor.main
+# AI
+OPENAI_API_KEY=sk-...
+MODEL=gpt-4o-mini
+
+# Telegram
+TELEGRAM_ENABLED=true
+TELEGRAM_BOT_TOKEN=123:abc
+TELEGRAM_CHAT_ID=999999
+
+# Discord
+DISCORD_ENABLED=true
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
 ```
 
-## Execução contínua (cron ou systemd)
+## Architecture
 
-Cron (a cada 20 minutos):
-```bash
-*/20 * * * * cd /path/to/project && /usr/bin/python3 -m rss_monitor.main --limit 10 >> rss.log 2>&1
+```
+rss_monitor/
+├── main.py          # Entry point & orchestration
+├── config.py        # Settings management (pydantic-settings)
+├── models.py        # Data models
+├── services/
+│   ├── feed.py      # RSS fetching & parsing
+│   ├── ai.py        # OpenAI integration
+│   └── notification.py  # Telegram/Discord delivery
+└── utils.py         # Helpers
 ```
 
-Systemd:
-Ver exemplo em `ops/rss-monitor.service.example`.
+## Use Cases
 
-## Próximos passos sugeridos
+- 📰 **News Aggregation** — Monitor tech/AI feeds for relevant content
+- 🎬 **Content Creation** — Auto-generate video scripts from news
+- 🔔 **Alerts** — Get notified about specific topics via Telegram/Discord
+- 💊 **Research** — Track industry trends with keyword filtering
 
-- Adicionar scraping do link completo quando o resumo do RSS for curto.
-- Criar um endpoint ou job no cron/PM2/systemd para rodar continuamente.
-- Salvar os roteiros em um banco (SQLite/Firestore) para curadoria manual.
-- Incluir TTS e geração de vídeo após o payload JSON.
+## Scheduling
+
+```bash
+# Cron (every 20 minutes)
+*/20 * * * * cd /path/to/feed-rss && python -m rss_monitor.main >> rss.log 2>&1
+```
+
+See `ops/` for systemd service examples.
+
+## Tech Stack
+
+- **Python 3.10+**
+- **aiohttp** — Async HTTP
+- **feedparser** — RSS parsing
+- **OpenAI** — Content generation
+- **Pydantic** — Config & validation
+
+## License
+
+MIT
+
+---
+
+Built by [Marcelo Marleta](https://github.com/mmarleta)
